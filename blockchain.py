@@ -189,12 +189,12 @@ class ChainBase:
     def size(self):
         return len(self.chain)
 
-    def serialize_short(self):
-        return {i:v.hash for i,v in enumerate(self.chain)}
-
     def serialize(self):
         return {'blocks' : {i:v.serialize() for i,v in enumerate(self.chain)},
                 'size' : len(self.chain)}
+
+    def serialize_short(self):
+        return {'size' : len(self.chain)}
 
     def last_hash(self):
         to_return = 0

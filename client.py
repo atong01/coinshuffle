@@ -9,7 +9,6 @@ app = Flask(__name__)
 api = Api(app)
 
 node = Node()
-chain = node.chain
 
 block_parser = reqparse.RequestParser()
 block_parser.add_argument('hash', type=str, required=True)
@@ -23,12 +22,12 @@ class GetBlock(Resource):
     def get(self, hash):
         if len(hash) < 64: # hash is index
             index = int(hash)
-            if index >= chain.size():
+            if index >= node.chain.size():
                 abort(404, message="Blockhash {} doesn't exist".format(hash))
-            return chain.chain[index].serialize()
-        if hash not in chain.map:
+            return node.chain.chain[index].serialize()
+        if hash not in node.chain.map:
             abort(404, message="Blockhash {} doesn't exist".format(hash))
-        return chain.map[hash].serialize()
+        return node.chain.map[hash].serialize()
 
 class Block(Resource):
     def post(self):
@@ -39,33 +38,33 @@ class Block(Resource):
                 'time': args['time'],
                 'transactions': args['transactions']}
         b = bl.Block.deserialize(data)
-        if chain.is_addable(b):
-            chain.add(b)
+        if node.chain.is_addable(b):
+            node.chain.add(b)
         else:
             print "Received non appliable block, discarding"
         return b.serialize(), 201
 
 class Chain(Resource):
     def get(self):
-        return chain.serialize()
+        return node.chain.serialize()
 
 node_parser = reqparse.RequestParser()
-node_parser.add_argument('nodes')
+node_parser.add_argument('nodes', required = True)
 
 class NodeRegister(Resource):
     def get(self):
-        return jsonify(node.nodes)
+        return list(node.nodes)
+
     def post(self):
-        args = block_parser.parse_args()
-        data = {'nodes' : args['nodes']}
-        for node in data['nodes']:
-            node.register_node(node)
-        return jsonify({'num_nodes': len(node.nodes)}), 201
+        args = node_parser.parse_args()
+        print args['nodes']
+        node.register_node(args['nodes'])
+        return {'num_nodes': len(node.nodes)}, 201
 
 class Mine(Resource):
     """ Automine block"""
     def get(self):
-        block = node.new_block(0, chain.last_hash())
+        block = node.new_block(0, node.chain.last_hash())
         return block.serialize(), 200
 
 tx_parser = reqparse.RequestParser()
@@ -80,7 +79,7 @@ class Transactions(Resource):
 class Resolve(Resource):
     def get(self):
         updated = node.resolve()
-        return {'updated': updated, 'chain': chain.serialize()}
+        return {'updated': updated, 'chain': node.chain.serialize_short()}
 
 api.add_resource(Chain, '/chain')
 api.add_resource(GetBlock, '/block/<string:hash>')
@@ -88,10 +87,14 @@ api.add_resource(Block, '/block')
 api.add_resource(NodeRegister, '/nodes')
 api.add_resource(Transactions, '/transactions/new')
 api.add_resource(Resolve, '/resolve')
+api.add_resource(Mine, '/mine')
 
 if __name__ == '__main__':
     from argparse import ArgumentParser
     parser = ArgumentParser()
     parser.add_argument('-p', '--port', default=5000, type=int, help = "Application port")
+    parser.add_argument('--peers', nargs='*', help="Peers to add")
     args = parser.parse_args()
+    for peer in args.peers:
+        node.register_node(peer)
     app.run(host='0.0.0.0', port=args.port)
