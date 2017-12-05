@@ -7,7 +7,7 @@ python client.py -p 5001 --peers $c0 $c2 &
 python client.py -p 5002 --peers $c0 $c1 &
 sleep 3
 
-curl -d '{"source":"a","target":"b","amount":"500"}' \
+curl -d '{"source":"alice","target":"b","amount":"500"}' \
   -H "Content-Type: application/json" -X POST \
   http://0.0.0.0:5002/transactions/new
 

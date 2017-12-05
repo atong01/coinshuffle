@@ -2,6 +2,7 @@ import datetime
 import hashlib
 import time
 import json
+from util import pack_tx
 hasher = hashlib.sha256
 encoding = 'utf-8'
 max_transaction_data_length = 1024
@@ -165,6 +166,7 @@ class ChainBase:
     def __init__(self):
         self.chain = []
         self.map   = {}
+        self.add(genesis_block())
 
     def is_addable(self, block):
         if len(self.chain) == 0:
@@ -212,18 +214,29 @@ class ChainBase:
             new_chain.add(b)
         return new_chain
 
+class TransactionChain(ChainBase):
+    def __init__(self):
+        super(TransactionChain, self).__init__()
+
+    def validate(self):
+        if not super(TransactionChain, self).validate():
+            raise RuntimeError("Chain hash validation failed")
+
+    def _block_validate(self):
+        """ Additional block level verification """
+
+
+
+
+def genesis_block():
+    t0 = Transaction(0,       pack_tx("0", "Alice", 100))
+    t1 = Transaction(t0.hash, pack_tx("0", "Bob"  , 100))
+    t2 = Transaction(t1.hash, pack_tx("0", "Cher" , 100))
+    t3 = Transaction(t2.hash, pack_tx("0", "Devin", 100))
+    return Block(0,0,t0,t1,t2,t3)
+
 def test_chain():
-    chain = ChainBase()
-    t0 = Transaction(0, "hello world")
-    t1 = Transaction(t0.hash, "woe is me")
-    t2 = Transaction(0,"foo")
-    t3 = Transaction(t2.hash, "bar")
-    t4 = Transaction(t3.hash, "zoo")
-    b0 = Block(0, 0, t0,t1)
-    b1 = Block(0, b0.hash, t2,t3,t4)
-    chain.add(b0)
-    chain.add(b1)
-    return chain
+    return ChainBase()
 
 if __name__ == "__main__":
     chain = test_chain()
