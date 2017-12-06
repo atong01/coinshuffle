@@ -37,10 +37,13 @@ Client Interface
 
 /mine -- [GET] immediately mines a block with the currently uncommited transactions on the node
 
-/coinshuffle/new -- Create a new Coinshuffle instance (needs specified shuffle server
+/coinshuffle/new -- [POST] Create a new Coinshuffle instance (needs specified shuffle server
 
-/coinshuffle/shuffle -- perform next step of the shuffle
+/coinshuffle/shuffle -- [GET] perform next step of the shuffle
 
-/coinshuffle/initiate -- start a coinshuffle round with a specified list of peers
+/coinshuffle/initiate -- [GET] start a coinshuffle round with a specified list of peers
 
-
+Future Work
+-----------
+Verification of transactions
+Separate wallet and agents
