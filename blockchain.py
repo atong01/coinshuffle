@@ -209,7 +209,7 @@ class ChainBase:
         if type(d) is not dict:
             d = json.loads(d)
         new_chain = ChainBase()
-        for i in range(len(d['blocks'])):
+        for i in range(1, len(d['blocks'])):
             b = Block.deserialize(d['blocks'][str(i)])
             new_chain.add(b)
         return new_chain

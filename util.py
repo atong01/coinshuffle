@@ -8,6 +8,26 @@ def pack_tx(source, target, amount):
 def unpack_tx(data):
     return json.loads(data)
 
+def pack_multi_tx(ins, outs):
+    data = {
+        'in': {
+            "0": {
+                "amount": "1",
+                "addr": "Alice"
+            }
+        },
+        'out': {
+            "0": {
+                "amount": "1",
+                "addr": "Bob"
+            }
+        }
+    }
+    return json.dumps(data)
+
+def unpack_multi_tx(data):
+    return json.loads(data)
+
 def generate_keypair():
     random_gen = Random.new().read
     return RSA.generate(1024, random_gen)
@@ -16,7 +36,7 @@ def public_key(keypair):
     return hexlify(keypair.publickey().exportKey('DER'))
 
 def encrypt(epkey, msg):
-    return hexlify(RSA.importKey(unhexlify(epkey)).encrypt(msg, 'x')[0])
+    return hexlify(RSA.importKey(unhexlify(str(epkey))).encrypt(str(msg), 'x')[0])
     
 def decrypt(keypair, emsg):
     return keypair.decrypt(unhexlify(emsg))

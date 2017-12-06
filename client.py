@@ -8,7 +8,6 @@ from Node import Node
 app = Flask(__name__)
 api = Api(app)
 
-node = Node()
 
 block_parser = reqparse.RequestParser()
 block_parser.add_argument('hash', type=str, required=True)
@@ -57,7 +56,6 @@ class NodeRegister(Resource):
 
     def post(self):
         args = node_parser.parse_args()
-        print args['nodes']
         node.register_node(args['nodes'])
         return {'num_nodes': len(node.nodes)}, 201
 
@@ -81,6 +79,34 @@ class Resolve(Resource):
         updated = node.resolve()
         return {'updated': updated, 'chain': node.chain.serialize_short()}
 
+ns_parser = reqparse.RequestParser()
+ns_parser.add_argument('source')
+ns_parser.add_argument('hidden_target')
+ns_parser.add_argument('server_addr')
+class NewShuffler(Resource):
+    def post(self):
+        args = ns_parser.parse_args()
+        node.new_coin_shuffle(args['source'], args['hidden_target'],
+                              args['server_addr'])
+        return {}, 201
+
+shuffle_parser = reqparse.RequestParser()
+shuffle_parser.add_argument('data')
+class Shuffler(Resource):
+    def post(self):
+        args = shuffle_parser.parse_args()
+        node.coin_shuffler.perform_shuffle(args['data'])
+        return {}, 202
+
+ss_parser = reqparse.RequestParser()
+ss_parser.add_argument('peers')
+ss_parser.add_argument('order')
+ss_parser.add_argument('participants')
+class StartShuffler(Resource):
+    def post(self):
+        args = ss_parser.parse_args()
+        node.coin_shuffler.start(json.loads(args['peers']), json.loads(args['order']))
+
 api.add_resource(Chain, '/chain')
 api.add_resource(GetBlock, '/block/<string:hash>')
 api.add_resource(Block, '/block')
@@ -88,13 +114,19 @@ api.add_resource(NodeRegister, '/nodes')
 api.add_resource(Transactions, '/transactions/new')
 api.add_resource(Resolve, '/resolve')
 api.add_resource(Mine, '/mine')
+api.add_resource(NewShuffler, '/coinshuffle/new')
+api.add_resource(Shuffler, '/coinshuffle/shuffle')
+api.add_resource(StartShuffler, '/coinshuffle/initiate')
 
 if __name__ == '__main__':
     from argparse import ArgumentParser
     parser = ArgumentParser()
     parser.add_argument('-p', '--port', default=5000, type=int, help = "Application port")
     parser.add_argument('--peers', nargs='*', help="Peers to add")
+    parser.add_argument('-c', '--coin-shuffle-address', type=str, help= "Address of coin shuffle coordinator")
     args = parser.parse_args()
-    for peer in args.peers:
-        node.register_node(peer)
+    node = Node(addr = 'http://0.0.0.0:' + str(args.port) + '/', csaddr = args.coin_shuffle_address)
+    if args.peers is not None:
+        for peer in args.peers:
+            node.register_node(peer)
     app.run(host='0.0.0.0', port=args.port)
