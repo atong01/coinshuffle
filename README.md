@@ -19,6 +19,8 @@ Overview
 --------
 We implement a general blockchain on top of a rest API. Each client represents a blockchain node. 
 
+Note that the anonblock proposal depicts the eventual idea of this project.
+
 Client Interface
 ----------------
 /chain -- [GET] returns a view of the full chain
