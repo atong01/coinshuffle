@@ -83,7 +83,7 @@ class CoinShuffleClient:
         self.encrypted_target = self._encrypt_dest()
         if self.index != 0:
             return
-        self.perform_shuffle(json.dumps({}))
+        self.perform_shuffle(json.dumps({}), json.dumps({}))
 
     def next_addr(self):
         if self.peers is None or self.order is None:
@@ -119,22 +119,24 @@ class CoinShuffleClient:
             t = util.encrypt(self.order[str(i)], t)
         return t
 
-    def perform_shuffle(self, data):
+    def perform_shuffle(self, sources, data):
+        print type(sources)
+        sources = json.loads(sources)
         data = json.loads(data)
         assert self.index == len(data)
         data = self._decrypt_data(data)
         data[str(self.index)] = {
             "public_key": self.ek,
-            "source": self.source,
             "target": self.encrypted_target
         }
+        sources[str(self.index)] = {"source": self.source}
         data = self._shuffle_data(data)
         if self.index == self.num_peers - 1:
-            self.construct_transactions(data)
+            self.construct_transactions(sources, data)
         else:
-            requests.post(self.next_addr() + "coinshuffle/shuffle", {'data': json.dumps(data)})
+            requests.post(self.next_addr() + "coinshuffle/shuffle", {'data': json.dumps(data), 'sources':json.dumps(sources)})
 
-    def construct_transactions(self, data):
+    def construct_transactions(self, sources, data):
         """ Construct a new transaction block.
 
         Use Node operations to construct a new block.
@@ -143,6 +145,8 @@ class CoinShuffleClient:
         ins = {}
         outs = {}
         for i,tx in data.iteritems():
-            ins[str(i)]  = {'amount' : self.amount, 'addr': tx['source']}
+            source = sources[str(i)]
+            ins[str(i)]  = {'amount' : self.amount, 'addr': source}
             outs[str(i)] = {'amount' : self.amount, 'addr': tx['target']}
+        print ins, outs
         self.node.new_multi_tx(ins, outs)

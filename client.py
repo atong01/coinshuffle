@@ -91,11 +91,12 @@ class NewShuffler(Resource):
         return {}, 201
 
 shuffle_parser = reqparse.RequestParser()
+shuffle_parser.add_argument('sources')
 shuffle_parser.add_argument('data')
 class Shuffler(Resource):
     def post(self):
         args = shuffle_parser.parse_args()
-        node.coin_shuffler.perform_shuffle(args['data'])
+        node.coin_shuffler.perform_shuffle(args['sources'], args['data'])
         return {}, 202
 
 ss_parser = reqparse.RequestParser()
@@ -130,3 +131,4 @@ if __name__ == '__main__':
         for peer in args.peers:
             node.register_node(peer)
     app.run(host='0.0.0.0', port=args.port)
+

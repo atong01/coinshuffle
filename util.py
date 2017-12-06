@@ -9,20 +9,7 @@ def unpack_tx(data):
     return json.loads(data)
 
 def pack_multi_tx(ins, outs):
-    data = {
-        'in': {
-            "0": {
-                "amount": "1",
-                "addr": "Alice"
-            }
-        },
-        'out': {
-            "0": {
-                "amount": "1",
-                "addr": "Bob"
-            }
-        }
-    }
+    data = {'in': ins, 'out':outs }
     return json.dumps(data)
 
 def unpack_multi_tx(data):
