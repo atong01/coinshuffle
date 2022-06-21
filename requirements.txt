@@ -10,7 +10,7 @@ itsdangerous==0.24
 Jinja2==2.10
 MarkupSafe==1.0
 Naked==0.1.31
-numpy==1.13.3
+numpy==1.22.0
 pycrypto==2.6.1
 python-dateutil==2.6.1
 pytz==2017.3
